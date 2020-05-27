@@ -1,0 +1,42 @@
+@color-primary: #686ddf; // 主色
+@color-primary-hover: fade(@color-primary, 80%); // hover
+@color-primary-disable: fade(@color-primary, 40%); // disable
+@border-color: #97a4ba; // 边框色
+@color-success: #48c486; // 成功
+@color-info: #f5b225; // 提示
+@color-warning: #ea4c72; // 警告
+@color-other: #4386f5; // 其他
+@color-disabled: #bfbfbf; // 禁用
+@scrollbar-track-piece: transparent; // 滚动条背景色
+@scrollbar-thumb: fade(@white, 50%); // 滚动条颜色
+@black: #000000;
+@white: #ffffff;
+
+/* *文本色* */
+@color-text-regular: #000000; // 主文本
+@color-text-secondary: #d1d1d1; // 次文本
+/* 文本框 */
+//@color-input: #4c5080; // 文本框背景色
+//@color-input-hover: #5559a6; // 文本框hover色
+/* 背景色调 */
+//@color-main-background: #3d414e; // 主色调
+//@color-sub-background: #353944; // 辅色调
+//@color-table-hover: #32353f; // table-hover
+@color-background: #ffffff; // 背景
+//@color-header-background: #2f323c; // header色调
+/* 轮播图 */
+//@color-wheel-background: #1a2741;
+/* 字号 */
+@font-size-base: 14px; // 主字号
+@border-radius-base: 4px; // 组件/浮层圆角
+@container-height: calc(100% - 3.5rem - 2px);
+@box-shadow-base: 0px 0px 10px 0px @black;;   // 浮层阴影
+
+:export{
+  primaryColor: @color-primary;
+  textColor: @color-text-regular;
+  //backgroundColor: @color-main-background;
+  //disablePrimaryColor: @color-input;
+  //disableBackgroundColor: @color-sub-background;
+  disableTextColor: @color-text-secondary;
+}
