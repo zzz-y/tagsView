@@ -2,13 +2,18 @@
   <el-container class="el-container">
     <div class="edit-image">
       <div class="operation-wrapper">
-        <el-button type="text"
-                   v-for="obj in operationList"
-                   :class="active===obj.id?'active':''"
-                   @click="shapeToggle(obj.id)">{{obj.name}}</el-button>
-      </div>
-      <div class="image-wrapper">
-        <img src="@/assets/img/2.jpg"/>
+        <div>
+          <el-button type="text"
+                     v-for="obj in operationList"
+                     :class="active===obj.id?'active':''"
+                     @click="shapeToggle(obj.id)">{{obj.name}}</el-button>
+        </div>
+        <div>
+          <el-button type="text" :disabled="scaleIndex===0" @click="scale(false)">缩小</el-button>
+          {{scaleList[scaleIndex].scale * 100}}%
+          <el-button type="text" :disabled="scaleIndex===10" @click="scale(true)">放大</el-button>
+        </div>
+        <el-button>保存</el-button>
       </div>
       <div class="style-config" v-if="active>1&&active<7">
         <span class="stroke-width" v-if="active>1&&active<5">
@@ -19,7 +24,7 @@
           <span :class="currentImage.strokeWidth===8?'checked':''"
                 @click="changeStrokeWidth(8)">3</span>
         </span>
-        <span class="font-size-select">
+        <span class="font-size-select" v-if="active===5">
           <el-select v-model="fontSize" @change="changeFontSize">
             <el-option v-for="size in fontSizeList" :key="size" :value="size">{{size}}</el-option>
           </el-select>
@@ -34,7 +39,17 @@
           </span>
         </span>
       </div>
-      <div id="svg-container"></div>
+      <div class="main">
+        <div class="image-wrapper" :style="{width: `${scaleList[scaleIndex].width}px`,
+        height: `${scaleList[scaleIndex].height}px`,
+        margin: `${scaleList[scaleIndex].scale < 1 ? 'auto' : 'inherit'}`}">
+          <img id="image" src="@/assets/img/1.jpg"/>
+        </div>
+        <div id="svg-container" :style="{width: `${scaleList[scaleIndex].width}px`,
+        height: `${scaleList[scaleIndex].height}px`,
+        left: `${scaleList[scaleIndex].scale < 1 ? '50%' : 'inherit'}`,
+        transform: `${scaleList[scaleIndex].scale < 1 ? 'translateX(-50%)':'inherit'}`}"></div>
+      </div>
       <div id="textInput" class="text-input"
            contenteditable="true"
            :style="{
@@ -46,7 +61,7 @@
 </template>
 
 <script>
-import { drawInit, toggleDrawingMode } from '@/js/draw'
+import { drawInit, toggleDrawingMode, changeScale, scaleGraphics } from '@/js/draw'
 import { mapState, mapActions } from 'vuex'
 
 export default {
@@ -89,7 +104,69 @@ export default {
         '#ea4c72', '#f5b225', '#48c486', '#4386f5', '#000000', '#ffffff'
       ],
       fontSizeList: [8, 9, 10, 12, 14, 16, 18, 20, 22],
-      fontSize: ''
+      fontSize: '',
+      scaleList: [
+        {
+          width: 600 * 0.2,
+          height: 500 * 0.2 - 36,
+          scale: 0.2
+        },
+        {
+          width: 600 * 0.3,
+          height: 500 * 0.3 - 36,
+          scale: 0.3
+        },
+        {
+          width: 600 * 0.5,
+          height: 500 * 0.5 - 36,
+          scale: 0.5
+        },
+        {
+          width: 600 * 0.8,
+          height: 500 * 0.8 - 36,
+          scale: 0.8
+        },
+        {
+          width: 600 * 0.9,
+          height: 500 * 0.9 - 36,
+          scale: 0.9
+        },
+        {
+          width: 598,
+          height: 460,
+          scale: 1
+        },
+        {
+
+          width: 600 * 1.5,
+          height: 500 * 1.5 - 36,
+          scale: 1.5
+        },
+        {
+
+          width: 600 * 2,
+          height: 500 * 2 - 36,
+          scale: 2
+        },
+        {
+
+          width: 600 * 2.5,
+          height: 500 * 2.5 - 36,
+          scale: 2.5
+        },
+        {
+
+          width: 600 * 3,
+          height: 500 * 3 - 36,
+          scale: 3
+        },
+        {
+
+          width: 600 * 4,
+          height: 500 * 4 - 36,
+          scale: 4
+      }],
+      scaleIndex: 5,
     };
   },
   mounted () {
@@ -135,8 +212,14 @@ export default {
     changeFontSize () {
       this.updateFontSize(this.fontSize)
     },
-    handleAvatarSuccess(res, file) {
-      this.imageUrl = URL.createObjectURL(file.raw)
+    scale(isAdd) {
+      if (isAdd) {
+        ++this.scaleIndex
+      } else {
+        --this.scaleIndex
+      }
+      changeScale(this.scaleList[this.scaleIndex].scale)
+      scaleGraphics()
     }
   },
   computed: {

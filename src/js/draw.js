@@ -63,38 +63,29 @@ export function toggleDrawingMode (shapeId) {
 
 // 缩放系数变化时，重绘所有图形
 export function scaleGraphics () {
-  const created = cloneDeep(store.state.notation.created)
+  const created = cloneDeep(store.state.editImage.currentSvg)
   drawInit()
   drawCreated(created)
 }
 
 /* 绘制已创建的批注项图形 */
 export function drawCreated (data) {
-  const g = []
   data.forEach((d) => {
-    const graph = JSON.parse(d.address)
-    const param = graphicParamFormat(scaleParamRecover(graph.coords), graph.drawingMode)
-    const graphic = svg.append(graph.drawingMode)
-      .attr('stroke', graph.color)
-      .attr('stroke-width', graph.lineWidth || 2)
-      .attr('fill', 'transparent')
-    forOwn(param, (value, key) => {
-      graphic.attr(key, value)
-    })
-    graphic.attr('id', d.id)
-      .on('dblclick', function (d, i, nodes) {
-        store.commit('selectNotation', +nodes[i].id)
-      })
-    g.push(graphic)
-  })
-  store.commit('updateCreated', {
-    data,
-    graph: g,
+    currentShape = svg.append(d.drawingMode)
+    coords = d.coords ? scaleParamRecover(d.coords) : { sP: null, eP: null }
+    if (d.textPosition) {
+      d.textPosition = {
+        x: d.textPosition.x * scale,
+        y: (d.textPosition.y - d.fontSize) * scale + d.fontSize,
+      }
+    }
+    currentShape = drawGraphic(d.drawingMode, null, d).attr('id', d.id)
   })
 }
 
 /* 改变缩放比例 */
 export function changeScale (s) {
+  console.log(s)
   scale = s
 }
 
@@ -112,7 +103,7 @@ function handleMouseDown () {
       if ($('#textInput').css('display') === 'none') {
         textPosition = {
           x: d3.event.offsetX,
-          y: d3.event.offsetY
+          y: d3.event.offsetY + current.text.fontSize
         }
         $('#textInput').text('')
         $('#textInput').css('display', 'block').css('top', (d3.event.offsetY + 24)).css('left', d3.event.offsetX)
@@ -121,16 +112,15 @@ function handleMouseDown () {
         $('#textInput').css('display', 'none')
         currentShape = svg.append(drawingMode)
         const timestampId = Date.now()
-        currentShape = drawGraphic(drawingMode).attr('id', timestampId)
+        currentShape = drawGraphic(drawingMode, timestampId).attr('id', timestampId)
         textPosition = { x: 0, y: 0 }
-        console.log(currentShape.node().getComputedTextLength())
       }
     }
   }
 }
 
 function handleMouseMove () {
-  svg.style('cursor', drawingMode ? 'crosshair' : '')
+  svg.style('cursor', (drawingModeId > 1 && drawingModeId < 5) ? 'crosshair' : '')
   if (drawingMode && coords.sP && drawingModeId < 5 && drawingModeId > 1) {
     coords.eP = {
       offsetX: d3.event.offsetX,
@@ -152,8 +142,7 @@ function handleMouseUp () {
       currentShape.remove()
     } else {
       const timestampId = Date.now()
-      currentShape = drawGraphic(drawingMode)
-        .attr('id', timestampId)
+      currentShape = drawGraphic(drawingMode, timestampId).attr('id', timestampId)
     }
   }
   coords = {
@@ -165,28 +154,16 @@ function handleMouseUp () {
 
 function scaleParamFormatted (coordsObj) {
   return {
-    sP: {
-      offsetX: coordsObj.sP.offsetX / scale,
-      offsetY: coordsObj.sP.offsetY / scale
-    },
-    eP: {
-      offsetX: coordsObj.eP.offsetX / scale,
-      offsetY: coordsObj.eP.offsetY / scale
-    },
-  }
+    sP: { offsetX: coordsObj.sP.offsetX / scale, offsetY: coordsObj.sP.offsetY / scale },
+    eP: { offsetX: coordsObj.eP.offsetX / scale, offsetY: coordsObj.eP.offsetY / scale },
+  };
 }
 
 function scaleParamRecover (coordsObj) {
   return {
-    sP: {
-      offsetX: coordsObj.sP.offsetX * scale,
-      offsetY: coordsObj.sP.offsetY * scale
-    },
-    eP: {
-      offsetX: coordsObj.eP.offsetX * scale,
-      offsetY: coordsObj.eP.offsetY * scale
-    },
-  }
+    sP: { offsetX: coordsObj.sP.offsetX * scale, offsetY: coordsObj.sP.offsetY * scale },
+    eP: { offsetX: coordsObj.eP.offsetX * scale, offsetY: coordsObj.eP.offsetY * scale },
+  };
 }
 
 function isParamsValid (coords, drawingMode) {
@@ -208,7 +185,7 @@ function isParamsValid (coords, drawingMode) {
 }
 
 // 图形参数格式化
-function graphicParamFormat (coords, drawingMode) {
+function graphicParamFormat (coords, drawingMode, created) {
   const funcMap = {
     rect: function () {
       return {
@@ -216,6 +193,8 @@ function graphicParamFormat (coords, drawingMode) {
         y: min([coords.sP.offsetY, coords.eP.offsetY]),
         width: Math.abs(coords.sP.offsetX - coords.eP.offsetX),
         height: Math.abs(coords.sP.offsetY - coords.eP.offsetY),
+        color: created ? created.color : current.rectColor,
+        strokeWidth: created ? created.strokeWidth : current.strokeWidth,
       }
     },
     ellipse: function () {
@@ -224,6 +203,8 @@ function graphicParamFormat (coords, drawingMode) {
         cy: Math.abs(coords.sP.offsetY + coords.eP.offsetY) / 2,
         rx: Math.abs(coords.sP.offsetX - coords.eP.offsetX) / 2,
         ry: Math.abs(coords.sP.offsetY - coords.eP.offsetY) / 2,
+        color: created ? created.color : current.ellipseColor,
+        strokeWidth: created ? created.strokeWidth : current.strokeWidth,
       }
     },
     path: function () {
@@ -235,11 +216,19 @@ function graphicParamFormat (coords, drawingMode) {
         target: {
           x: coords.eP.offsetX,
           y: coords.eP.offsetY,
-        }
+        },
+        color: created ? created.color : current.pathColor,
+        strokeWidth: created ? created.strokeWidth : current.strokeWidth,
       }
     },
     text: function () {
-      return cloneDeep(textPosition)
+      return {
+        x: created ? created.textPosition.x : textPosition.x,
+        y: created ? created.textPosition.y : textPosition.y,
+        fontSize: created ? created.fontSize : current.text.fontSize,
+        text: created ? created.text : $('#textInput').text(),
+        color: created ? created.color : current.text.color,
+      }
     },
     tag: function () {
       return {
@@ -251,7 +240,7 @@ function graphicParamFormat (coords, drawingMode) {
   return funcMap[drawingMode](coords)
 }
 
-function drawGraphic (drawingMode) {
+function drawGraphic (drawingMode, id, created) {
   const maps = {
     rect: drawRect,
     ellipse: drawEllipse,
@@ -259,7 +248,21 @@ function drawGraphic (drawingMode) {
     text: drawText,
     tag: drawTag,
   }
-  const params = graphicParamFormat(coords, drawingMode)
+  const params = graphicParamFormat(coords, drawingMode, created)
+  if (id) {
+    if (textPosition.y !== 0) {
+      textPosition = {
+        x: textPosition.x / scale,
+        y: textPosition.y / scale + current.text.fontSize
+      }
+    }
+    store.dispatch('editImage/updateCurrentSvg', Object.assign(params, {
+      id,
+      drawingMode,
+      coords: textPosition.y ? null : scaleParamFormatted(coords),
+      textPosition: textPosition.y ? textPosition : null
+    }))
+  }
   return maps[drawingMode](params)
 }
 
@@ -269,25 +272,28 @@ function drawRect (params) {
     .attr('y', params.y)
     .attr('width', params.width)
     .attr('height', params.height)
-    .attr('stroke', current.rectColor)
-    .attr('stroke-width', current.strokeWidth)
+    .attr('fill', 'none')
+    .attr('stroke', params.color)
+    .attr('stroke-width', params.strokeWidth)
 }
 
 function drawEllipse (params) {
+  console.log(currentShape, params)
   return currentShape
     .attr('cx', params.cx)
     .attr('cy', params.cy)
     .attr('rx', params.rx)
     .attr('ry', params.ry)
-    .attr('stroke', current.ellipseColor)
-    .attr('stroke-width', current.strokeWidth)
+    .attr('fill', 'none')
+    .attr('stroke', params.color)
+    .attr('stroke-width', params.strokeWidth)
 }
 
 function drawLine (params) {
   return currentShape
-    .attr('stroke-width', current.strokeWidth)
-    .attr('stroke', current.pathColor)
-    .attr('fill', current.pathColor)
+    .attr('stroke-width', params.strokeWidth)
+    .attr('stroke', params.color)
+    .attr('fill', params.color)
     .attr('d', d => drawStraight(params.source, params.target, 0))
     .attr('transform', () => translatePath(params))
 }
@@ -296,22 +302,22 @@ function drawText (params) {
   currentShape
     .attr('x', params.x)
     .attr('y', params.y)
-    .attr('font-size', current.text.fontSize)
-    .text($('#textInput').text())
-    .style('fill', current.text.color)
-  wrapWord($('#svg-container').width() - textPosition.x)
+    .attr('font-size', params.fontSize)
+    .text(params.text)
+    .style('fill', params.color)
+  wrapWord($('#svg-container').width() - params.x, params.text)
+  return currentShape
 }
 
-function wrapWord (width) {
-  const text = currentShape
-  const words = $('#textInput').text().split('').reverse()
+function wrapWord (width, text) {
+  const words = text.split('').reverse()
   let word
   let line = []
   let lineNumber = 0
-  const lineHeight = text.node().getBoundingClientRect().height
-  const x = +text.attr('x')
-  const y = +text.attr('y')
-  let tspan = text.text(null).append('tspan').attr('x', x).attr('y', y)
+  const lineHeight = currentShape.node().getBoundingClientRect().height
+  const x = +currentShape.attr('x')
+  const y = +currentShape.attr('y')
+  let tspan = currentShape.text(null).append('tspan').attr('x', x).attr('y', y)
   while (word = words.pop()) {
     line.push(word)
     tspan.text(line.join(''))
@@ -319,7 +325,7 @@ function wrapWord (width) {
       line.pop()
       tspan.text(line.join(''))
       line = [word]
-      tspan = text.append('tspan').attr('x', x).attr('y', ++lineNumber * lineHeight + y).text(word)
+      tspan = currentShape.append('tspan').attr('x', x).attr('y', ++lineNumber * lineHeight + y).text(word)
     }
   }
 }

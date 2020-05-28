@@ -11,22 +11,10 @@
     background-color: @color-text-secondary;
     display: flex;
     padding: 0 1rem;
+    justify-content: space-between;
 
     .el-button.active {
       background-color: #48c486;
-    }
-  }
-
-  .image-wrapper {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-
-    img {
-      max-width: 100%;
-      max-height: 100%;
     }
   }
 
@@ -75,11 +63,24 @@
     }
   }
 
+  .main {
+    overflow: auto;
+    position: relative;
+  }
+
+  .image-wrapper {
+    img {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
   #svg-container {
     position: absolute;
-    top: 2rem;
-    height: calc(100% - 2rem);
-    width: 100%;
+    top: 0;
+    //height: 100%;
+    //width: 100%;
+    z-index: auto;
   }
 
   .text-input {

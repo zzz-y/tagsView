@@ -17,7 +17,7 @@ const editImage = {
       tag: {
         color: '#f5b225',
         background: '#bfbfbf'
-      }
+      },
     },
     currentImage: {
       strokeWidth: 2,
@@ -31,14 +31,16 @@ const editImage = {
       tag: {
         color: '#f5b225',
         background: '#bfbfbf'
-      }
+      },
     },
+    currentSvg: []
   },
   mutations: {
     SET_STROKE_WIDTH: (state, width) => {
       state.currentImage.strokeWidth = width
     },
     SET_STROKE_COLOR: (state, data) => {
+      console.log(data.id)
       switch (data.id) {
         case 2:
           state.currentImage.pathColor = data.color
@@ -62,6 +64,10 @@ const editImage = {
     SET_FONT_SIZE: (state, fontSize) => {
       state.currentImage.text.fontSize = fontSize
     },
+    SET_CURRENT_SVG: (state, data) => {
+      state.currentSvg.push(data)
+      console.log(state.currentSvg)
+    },
   },
   actions: {
     // 更新边框宽度
@@ -76,8 +82,9 @@ const editImage = {
     updateFontSize ({ commit, state }, data) {
       commit('SET_FONT_SIZE', data)
     },
-    addTabIndex ({ commit }) {
-      commit('ADD_TAB_INDEX')
+    // 更新svg中编辑内容
+    updateCurrentSvg ({ commit }, data) {
+      commit('SET_CURRENT_SVG', data)
     },
     // 新增工作区
     addWorkArea ({ commit }, data) {
