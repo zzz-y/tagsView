@@ -1,10 +1,10 @@
 import Vue from 'vue'
-import VueRouter from 'vue-router'
+import Router from 'vue-router'
 import Home from '../views/Home.vue'
 
-Vue.use(VueRouter)
+Vue.use(Router)
 
-const routes = [
+export const constantRoutes = [
   {
     path: '/',
     name: 'Home',
@@ -20,8 +20,33 @@ const routes = [
   }
 ]
 
-const router = new VueRouter({
-  routes
+export const asyncRoutes = [
+  {
+    path: '/icon',
+    component: Home,
+    name: 'icon',
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/About'),
+        name: 'Icons',
+        meta: { title: 'Icons', icon: 'icon', noCache: true, roles: ['admin', 'editor'] }
+      }
+    ]
+  }
+]
+
+const createRouter = () => new Router({
+  // mode: 'history', // require service support
+  scrollBehavior: () => ({ y: 0 }),
+  routes: constantRoutes
 })
+
+const router = createRouter()
+
+export function resetRouter() {
+  const newRouter = createRouter()
+  router.matcher = newRouter.matcher // reset router
+}
 
 export default router

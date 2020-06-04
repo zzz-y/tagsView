@@ -1,32 +1,25 @@
 <template>
-  <el-container id="app">
-    <el-header id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </el-header>
-    <router-view/>
-  </el-container>
+  <div id="app">
+    <navbar/>
+    <div class="container">
+      <sidebar/>
+      <router-view/>
+    </div>
+  </div>
 </template>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script>
+  import Navbar from './layout/Navbar'
+  import Sidebar from './layout/Sidebar'
 
-#nav {
-  padding: 30px;
-}
+  export default {
+    name: 'Layout',
+    components: {
+      Navbar,
+      Sidebar
+    },
+    computed: {},
+    methods: {}
+  }
+</script>
 
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>

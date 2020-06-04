@@ -73,6 +73,8 @@ export default {
     return {
       imageUrl: '',
       active: 0,
+      width: 600,
+      height: 500,
       operationList: [
         {
           id: 1,
@@ -107,28 +109,28 @@ export default {
       fontSize: '',
       scaleList: [
         {
-          width: 600 * 0.2,
-          height: 500 * 0.2 - 36,
+          width: this.width * 0.2,
+          height: this.height * 0.2 - 36,
           scale: 0.2
         },
         {
-          width: 600 * 0.3,
-          height: 500 * 0.3 - 36,
+          width: this.width * 0.3,
+          height: this.height * 0.3 - 36,
           scale: 0.3
         },
         {
-          width: 600 * 0.5,
-          height: 500 * 0.5 - 36,
+          width: this.width * 0.5,
+          height: this.height * 0.5 - 36,
           scale: 0.5
         },
         {
-          width: 600 * 0.8,
-          height: 500 * 0.8 - 36,
+          width: this.width * 0.8,
+          height: this.height * 0.8 - 36,
           scale: 0.8
         },
         {
-          width: 600 * 0.9,
-          height: 500 * 0.9 - 36,
+          width: this.width * 0.9,
+          height: this.height * 0.9 - 36,
           scale: 0.9
         },
         {
@@ -138,32 +140,32 @@ export default {
         },
         {
 
-          width: 600 * 1.5,
-          height: 500 * 1.5 - 36,
+          width: this.width * 1.5,
+          height: this.height * 1.5 - 36,
           scale: 1.5
         },
         {
 
-          width: 600 * 2,
-          height: 500 * 2 - 36,
+          width: this.width * 2,
+          height: this.height * 2 - 36,
           scale: 2
         },
         {
 
-          width: 600 * 2.5,
-          height: 500 * 2.5 - 36,
+          width: this.width * 2.5,
+          height: this.height * 2.5 - 36,
           scale: 2.5
         },
         {
 
-          width: 600 * 3,
-          height: 500 * 3 - 36,
+          width: this.width * 3,
+          height: this.height * 3 - 36,
           scale: 3
         },
         {
 
-          width: 600 * 4,
-          height: 500 * 4 - 36,
+          width: this.width * 4,
+          height: this.height * 4 - 36,
           scale: 4
       }],
       scaleIndex: 5,
