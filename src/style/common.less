@@ -1,6 +1,11 @@
 .container {
   display: flex;
   height: calc(100vh - 3.5rem);
+
+  > .main {
+    .mixin-flexColumn;
+    .mixin-autoFlex;
+  }
 }
 
 .nav-bar {
@@ -15,9 +20,12 @@
   text-align: center;
   color: #ffffff;
   background-color: #2a333d;
+  overflow: auto;
+
   > * {
     padding: 2rem 0;
-    &:hover{
+
+    &:hover {
       background-color: #1d242b;
     }
   }

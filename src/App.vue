@@ -1,25 +1,30 @@
 <template>
-  <div id="app">
+  <el-container id="app">
     <navbar/>
-    <div class="container">
+    <el-main class="container">
       <sidebar/>
-      <router-view/>
-    </div>
-  </div>
+      <el-main class="main">
+        <tags-view/>
+        <router-view/>
+      </el-main>
+    </el-main>
+  </el-container>
 </template>
 
 <script>
-  import Navbar from './layout/Navbar'
-  import Sidebar from './layout/Sidebar'
+import Navbar from './layout/Navbar'
+import Sidebar from './layout/Sidebar'
+import tagsView from './layout/TagsView'
 
-  export default {
-    name: 'Layout',
-    components: {
-      Navbar,
-      Sidebar
-    },
-    computed: {},
-    methods: {}
-  }
+export default {
+  name: 'Layout',
+  components: {
+    Navbar,
+    Sidebar,
+    tagsView
+  },
+  computed: {},
+  methods: {}
+}
 </script>
 

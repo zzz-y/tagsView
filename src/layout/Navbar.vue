@@ -1,5 +1,5 @@
 <template>
-  <div class="nav-bar">header</div>
+  <el-header height="3.5rem" class="nav-bar">header</el-header>
 </template>
 
 <script>
