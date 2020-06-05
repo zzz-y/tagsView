@@ -15,6 +15,10 @@ let coords = {
   sP: null, // 起点偏移,{ offsetX: num, offsetY: num }
   eP: null, // 终点偏移
 }
+let selectedTag = {
+  color: '',
+  id: ''
+}
 
 /* 绘制初始化 */
 export function drawInit () {
@@ -55,9 +59,6 @@ export function toggleDrawingMode (shapeId) {
     case 5:
       drawingMode = 'text'
       break
-    case 6:
-      drawingMode = 'tag'
-      break
   }
 }
 
@@ -85,8 +86,17 @@ export function drawCreated (data) {
 
 /* 改变缩放比例 */
 export function changeScale (s) {
-  console.log(s)
   scale = s
+}
+
+/* 删除标记 */
+export function deleteTags () {
+  d3.select(`#time_${selectedTag.id}`).remove()
+  store.dispatch('editImage/deleteTag', selectedTag)
+  selectedTag = {
+    color: '',
+    id: ''
+  }
 }
 
 function handleMouseDown () {
@@ -112,7 +122,7 @@ function handleMouseDown () {
         $('#textInput').css('display', 'none')
         currentShape = svg.append(drawingMode)
         const timestampId = Date.now()
-        currentShape = drawGraphic(drawingMode, timestampId).attr('id', timestampId)
+        currentShape = drawGraphic(drawingMode, timestampId).attr('id', `time_${timestampId}`)
         textPosition = { x: 0, y: 0 }
       }
     }
@@ -142,7 +152,7 @@ function handleMouseUp () {
       currentShape.remove()
     } else {
       const timestampId = Date.now()
-      currentShape = drawGraphic(drawingMode, timestampId).attr('id', timestampId)
+      currentShape = drawGraphic(drawingMode, timestampId).attr('id', `time_${timestampId}`)
     }
   }
   coords = {
@@ -246,7 +256,6 @@ function drawGraphic (drawingMode, id, created) {
     ellipse: drawEllipse,
     path: drawLine,
     text: drawText,
-    tag: drawTag,
   }
   const params = graphicParamFormat(coords, drawingMode, created)
   if (id) {
@@ -266,6 +275,44 @@ function drawGraphic (drawingMode, id, created) {
   return maps[drawingMode](params)
 }
 
+function mouseOver (d) {
+  d3.select(`#time_${d.id}`).style('cursor', 'move')
+}
+
+function mouseOut (d) {
+  d3.select(`#time_${d.id}`).style('cursor', 'crosshair')
+}
+
+function clickTag (d) {
+  const newColor = ColorReverse(d.color)
+  const selectedNode = d3.select(`#time_${d.id}`)
+  switch (d.drawingMode) {
+    case 'path':
+      selectedNode.attr('stroke', newColor)
+        .attr('fill', newColor)
+      break
+    case 'rect':
+      selectedNode.attr('stroke', newColor)
+      break
+    case 'ellipse':
+      selectedNode.attr('stroke', newColor)
+      break
+    case 'text':
+      selectedNode.attr('fill', newColor)
+      break
+  }
+  selectedTag = {
+    color: d.color,
+    id: d.id
+  }
+}
+
+function ColorReverse (Old) {
+  const OldColorValue = `0x${Old.replace(/#/g, '')}`
+  const str = `000000${(0xFFFFFF - OldColorValue).toString(16)}`
+  return `#${str.substring(str.length - 6, str.length)}`
+}
+
 function drawRect (params) {
   return currentShape
     .attr('x', params.x)
@@ -275,10 +322,18 @@ function drawRect (params) {
     .attr('fill', 'none')
     .attr('stroke', params.color)
     .attr('stroke-width', params.strokeWidth)
+    .on('mouseover', () => {
+      mouseOver(params)
+    })
+    .on('mouseout', () => {
+      mouseOut(params)
+    })
+    .on('click', () => {
+      clickTag(params)
+    })
 }
 
 function drawEllipse (params) {
-  console.log(currentShape, params)
   return currentShape
     .attr('cx', params.cx)
     .attr('cy', params.cy)
@@ -287,6 +342,15 @@ function drawEllipse (params) {
     .attr('fill', 'none')
     .attr('stroke', params.color)
     .attr('stroke-width', params.strokeWidth)
+    .on('mouseover', () => {
+      mouseOver(params)
+    })
+    .on('mouseout', () => {
+      mouseOut(params)
+    })
+    .on('click', () => {
+      clickTag(params)
+    })
 }
 
 function drawLine (params) {
@@ -296,6 +360,15 @@ function drawLine (params) {
     .attr('fill', params.color)
     .attr('d', d => drawStraight(params.source, params.target, 0))
     .attr('transform', () => translatePath(params))
+    .on('mouseover', () => {
+      mouseOver(params)
+    })
+    .on('mouseout', () => {
+      mouseOut(params)
+    })
+    .on('click', () => {
+      clickTag(params)
+    })
 }
 
 function drawText (params) {
@@ -305,6 +378,15 @@ function drawText (params) {
     .attr('font-size', params.fontSize)
     .text(params.text)
     .style('fill', params.color)
+    .on('mouseover', () => {
+      mouseOver(params)
+    })
+    .on('mouseout', () => {
+      mouseOut(params)
+    })
+    .on('click', () => {
+      clickTag(params)
+    })
   wrapWord($('#svg-container').width() - params.x, params.text)
   return currentShape
 }
@@ -328,14 +410,4 @@ function wrapWord (width, text) {
       tspan = currentShape.append('tspan').attr('x', x).attr('y', ++lineNumber * lineHeight + y).text(word)
     }
   }
-}
-
-function drawTag (params) {
-  return currentShape
-    .attr('x', params.x)
-    .attr('y', params.y)
-    .attr('width', params.width)
-    .attr('height', params.height)
-    .attr('stroke', current.rectColor)
-    .attr('stroke-width', current.strokeWidth)
 }
