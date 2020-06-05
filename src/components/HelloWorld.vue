@@ -96,10 +96,6 @@ export default {
           id: 5,
           name: '文本'
         },
-        {
-          id: 6,
-          name: '标签'
-        },
       ],
       checkedColor: '',
       colorList: [
