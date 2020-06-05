@@ -1,20 +1,30 @@
 <template>
   <div id="tags-view-container" class="tags-view-container">
     <div class="tags-view-wrapper">
-      <div class="tags-view-scroll">
-        <router-link
-          v-for="tag in visitedViews"
-          ref="tag"
-          :key="tag.path"
-          :class="isActive(tag)?'active':''"
-          :to="{ path: tag.path, query: tag.query, fullPath: tag.fullPath }"
-          tag="span"
-          class="tags-view-item"
-          @click.middle.native="closeSelectedTag(tag)"
-          @contextmenu.prevent.native="openMenu(tag,$event)">
-          {{ tag.title }}
-          <span v-if="!tag.meta.affix" class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)" />
-        </router-link>
+      <span class="nav-prev" @click="scrollPrevTag">
+        <i class="el-icon-arrow-left"></i>
+      </span>
+      <span class="nav-next" @click="scrollNextTag">
+        <i class="el-icon-arrow-right"></i>
+      </span>
+      <div class="tags-view-scroll" ref="navScroll">
+        <div class="tans-view-nav" ref="nav"
+             :style=navStyle>
+          <router-link
+            v-for="tag in visitedViews"
+            ref="tag"
+            :key="tag.path"
+            :class="isActive(tag)?'active':''"
+            :to="{ path: tag.path, query: tag.query, fullPath: tag.fullPath }"
+            tag="div"
+            class="tags-view-item"
+            @click.left.native="selectTag(tag)"
+            @click.middle.native="closeSelectedTag(tag)"
+            @contextmenu.prevent.native="openMenu(tag,$event)">
+            {{ tag.title }}
+            <span v-if="!tag.meta.affix" class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)"/>
+          </router-link>
+        </div>
       </div>
     </div>
     <ul v-show="visible" :style="{left:left+'px',top:top+'px'}" class="contextmenu">
@@ -37,7 +47,8 @@ export default {
       top: 0,
       left: 0,
       selectedTag: {},
-      affixTags: []
+      affixTags: [],
+      navOffset: 0,
     }
   },
   computed: {
@@ -46,12 +57,20 @@ export default {
     },
     routes() {
       return this.$store.state.permission.routes
-    }
+    },
+    navStyle() {
+      return {
+        transform: `translateX(-${this.navOffset}px)`
+      };
+    },
   },
   watch: {
     $route() {
       this.addTags()
       this.moveToCurrentTag()
+      setTimeout(() => {
+        this.scrollToActiveTab()
+      }, 0);
     },
     visible(value) {
       if (value) {
@@ -66,6 +85,58 @@ export default {
     this.addTags()
   },
   methods: {
+    scrollPrevTag() {
+      const containerSize = this.$refs.navScroll['offsetWidth'];
+      const currentOffset = this.navOffset;
+
+      if (!currentOffset) return;
+
+      let newOffset = currentOffset > containerSize
+        ? currentOffset - containerSize
+        : 0;
+
+      this.navOffset = newOffset;
+    },
+    scrollNextTag() {
+      const navSize = this.$refs.nav['offsetWidth'];
+      const containerSize = this.$refs.navScroll['offsetWidth'];
+      const currentOffset = this.navOffset;
+
+      if (navSize - currentOffset <= containerSize) return;
+
+      let newOffset = navSize - currentOffset > containerSize * 2
+        ? currentOffset + containerSize
+        : (navSize - containerSize);
+
+      this.navOffset = newOffset;
+    },
+    scrollToActiveTab() {
+      const navSize = this.$refs.nav['offsetWidth'];
+      const containerSize = this.$refs.navScroll['offsetWidth'];
+      if (navSize <= containerSize) return;
+      const nav = this.$refs.nav;
+      const activeTab = this.$el.querySelector('.active');
+      if (!activeTab) return;
+      const navScroll = this.$refs.navScroll;
+      const activeTabBounding = activeTab.getBoundingClientRect();
+      const navScrollBounding = navScroll.getBoundingClientRect();
+      const maxOffset = nav.offsetWidth - navScrollBounding.width;
+      const currentOffset = this.navOffset;
+      let newOffset = currentOffset;
+
+      if (activeTabBounding.left < navScrollBounding.left) {
+        newOffset = currentOffset - (navScrollBounding.left - activeTabBounding.left)
+      }
+      if (activeTabBounding.right > navScrollBounding.right) {
+        newOffset = currentOffset + activeTabBounding.right - navScrollBounding.right
+      }
+
+      newOffset = Math.max(newOffset, 0);
+      this.navOffset = Math.min(newOffset, maxOffset);
+    },
+    selectTag (tag) {
+      this.scrollToActiveTab();
+    },
     isActive(route) {
       return route.path === this.$route.path
     },
@@ -101,7 +172,6 @@ export default {
     },
     addTags() {
       const { name } = this.$route
-      console.log('$route', this.$route, this.route)
       if (name) {
         this.$store.dispatch('tagsView/addView', this.$route)
       }
@@ -201,13 +271,21 @@ export default {
 
   .tags-view-wrapper {
     overflow: hidden;
-    white-space: nowrap;
     position: relative;
+    padding: 0 20px;
 
     .tags-view-scroll {
       overflow: hidden;
 
+      .tans-view-nav{
+        position: relative;
+        float: left;
+        transition: transform .3s;
+        white-space: nowrap;
+        z-index: 2;
+      }
       .tags-view-item {
+        user-select: none;
         display: inline-block;
         position: relative;
         cursor: pointer;
@@ -220,14 +298,6 @@ export default {
         font-size: 12px;
         margin-left: 5px;
         margin-top: 4px;
-
-        &:first-of-type {
-          margin-left: 15px;
-        }
-
-        &:last-of-type {
-          margin-right: 15px;
-        }
 
         &.active {
           background-color: #42b983;
@@ -272,6 +342,17 @@ export default {
       }
     }
   }
+
+  .nav-next, .nav-prev {
+    position: absolute;
+    cursor: pointer;
+    line-height: 30px;
+    font-size: 12px;
+    color: #1e1f22;
+  }
+  .nav-prev {left: 0;}
+
+  .nav-next {right: 0;}
 }
 </style>
 
