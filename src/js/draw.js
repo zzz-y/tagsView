@@ -17,7 +17,8 @@ let coords = {
 }
 let selectedTag = {
   color: '',
-  id: ''
+  id: '',
+  drawingMode: ''
 }
 
 /* 绘制初始化 */
@@ -38,6 +39,7 @@ export function drawInit () {
     .on('mousedown', handleMouseDown)
     .on('mousemove', handleMouseMove)
     .on('mouseup', handleMouseUp)
+    .on('click', handleClick)
 }
 
 /* 切换绘制模式 */
@@ -73,7 +75,10 @@ export function scaleGraphics () {
 export function drawCreated (data) {
   data.forEach((d) => {
     currentShape = svg.append(d.drawingMode)
-    coords = d.coords ? scaleParamRecover(d.coords) : { sP: null, eP: null }
+    coords = d.coords ? scaleParamRecover(d.coords) : {
+      sP: null,
+      eP: null
+    }
     if (d.textPosition) {
       d.textPosition = {
         x: d.textPosition.x * scale,
@@ -95,7 +100,8 @@ export function deleteTags () {
   store.dispatch('editImage/deleteTag', selectedTag)
   selectedTag = {
     color: '',
-    id: ''
+    id: '',
+    drawingMode: ''
   }
 }
 
@@ -123,7 +129,10 @@ function handleMouseDown () {
         currentShape = svg.append(drawingMode)
         const timestampId = Date.now()
         currentShape = drawGraphic(drawingMode, timestampId).attr('id', `time_${timestampId}`)
-        textPosition = { x: 0, y: 0 }
+        textPosition = {
+          x: 0,
+          y: 0
+        }
       }
     }
   }
@@ -162,18 +171,42 @@ function handleMouseUp () {
   svg.style('cursor', '')
 }
 
+function handleClick () {
+  console.log('click')
+  if (selectedTag.id) {
+    recoveryTag(selectedTag, selectedTag.color)
+    selectedTag = {
+      color: '',
+      id: '',
+      drawingMode: ''
+    }
+  }
+}
+
 function scaleParamFormatted (coordsObj) {
   return {
-    sP: { offsetX: coordsObj.sP.offsetX / scale, offsetY: coordsObj.sP.offsetY / scale },
-    eP: { offsetX: coordsObj.eP.offsetX / scale, offsetY: coordsObj.eP.offsetY / scale },
-  };
+    sP: {
+      offsetX: coordsObj.sP.offsetX / scale,
+      offsetY: coordsObj.sP.offsetY / scale
+    },
+    eP: {
+      offsetX: coordsObj.eP.offsetX / scale,
+      offsetY: coordsObj.eP.offsetY / scale
+    },
+  }
 }
 
 function scaleParamRecover (coordsObj) {
   return {
-    sP: { offsetX: coordsObj.sP.offsetX * scale, offsetY: coordsObj.sP.offsetY * scale },
-    eP: { offsetX: coordsObj.eP.offsetX * scale, offsetY: coordsObj.eP.offsetY * scale },
-  };
+    sP: {
+      offsetX: coordsObj.sP.offsetX * scale,
+      offsetY: coordsObj.sP.offsetY * scale
+    },
+    eP: {
+      offsetX: coordsObj.eP.offsetX * scale,
+      offsetY: coordsObj.eP.offsetY * scale
+    },
+  }
 }
 
 function isParamsValid (coords, drawingMode) {
@@ -283,28 +316,37 @@ function mouseOut (d) {
   d3.select(`#time_${d.id}`).style('cursor', 'crosshair')
 }
 
-function clickTag (d) {
-  const newColor = ColorReverse(d.color)
+function recoveryTag (d, color) {
   const selectedNode = d3.select(`#time_${d.id}`)
   switch (d.drawingMode) {
     case 'path':
-      selectedNode.attr('stroke', newColor)
-        .attr('fill', newColor)
+      selectedNode.attr('stroke', color)
+        .attr('fill', d.color)
       break
     case 'rect':
-      selectedNode.attr('stroke', newColor)
+      selectedNode.attr('stroke', color)
       break
     case 'ellipse':
-      selectedNode.attr('stroke', newColor)
+      selectedNode.attr('stroke', color)
       break
     case 'text':
-      selectedNode.attr('fill', newColor)
+      selectedNode.attr('fill', color)
       break
   }
+}
+
+function clickTag (d) {
+  if (selectedTag.id) {
+    recoveryTag(selectedTag, selectedTag.color)
+  }
+  const newColor = ColorReverse(d.color)
+  recoveryTag(d, newColor)
   selectedTag = {
     color: d.color,
-    id: d.id
+    id: d.id,
+    drawingMode: d.drawingMode,
   }
+  event.stopPropagation()
 }
 
 function ColorReverse (Old) {

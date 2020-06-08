@@ -12,6 +12,7 @@
           <el-button type="text" :disabled="scaleIndex===0" @click="scale(false)">缩小</el-button>
           {{scaleList[scaleIndex].scale * 100}}%
           <el-button type="text" :disabled="scaleIndex===10" @click="scale(true)">放大</el-button>
+          <el-button type="text" @click="deleteTag">删除</el-button>
         </div>
         <el-button>保存</el-button>
       </div>
@@ -61,9 +62,11 @@
 </template>
 
 <script>
-import { drawInit, toggleDrawingMode, changeScale, scaleGraphics } from '@/js/draw'
+import { drawInit, toggleDrawingMode, changeScale, scaleGraphics, deleteTags } from '@/js/draw'
 import { mapState, mapActions } from 'vuex'
 
+const width = 600
+const height = 500
 export default {
   name: 'HelloWorld',
   props: {
@@ -73,8 +76,6 @@ export default {
     return {
       imageUrl: '',
       active: 0,
-      width: 600,
-      height: 500,
       operationList: [
         {
           id: 1,
@@ -105,28 +106,28 @@ export default {
       fontSize: '',
       scaleList: [
         {
-          width: this.width * 0.2,
-          height: this.height * 0.2 - 36,
+          width: width * 0.2,
+          height: height * 0.2 - 36,
           scale: 0.2
         },
         {
-          width: this.width * 0.3,
-          height: this.height * 0.3 - 36,
+          width: width * 0.3,
+          height: height * 0.3 - 36,
           scale: 0.3
         },
         {
-          width: this.width * 0.5,
-          height: this.height * 0.5 - 36,
+          width: width * 0.5,
+          height: height * 0.5 - 36,
           scale: 0.5
         },
         {
-          width: this.width * 0.8,
-          height: this.height * 0.8 - 36,
+          width: width * 0.8,
+          height: height * 0.8 - 36,
           scale: 0.8
         },
         {
-          width: this.width * 0.9,
-          height: this.height * 0.9 - 36,
+          width: width * 0.9,
+          height: height * 0.9 - 36,
           scale: 0.9
         },
         {
@@ -136,32 +137,32 @@ export default {
         },
         {
 
-          width: this.width * 1.5,
-          height: this.height * 1.5 - 36,
+          width: width * 1.5,
+          height: height * 1.5 - 36,
           scale: 1.5
         },
         {
 
-          width: this.width * 2,
-          height: this.height * 2 - 36,
+          width: width * 2,
+          height: height * 2 - 36,
           scale: 2
         },
         {
 
-          width: this.width * 2.5,
-          height: this.height * 2.5 - 36,
+          width: width * 2.5,
+          height: height * 2.5 - 36,
           scale: 2.5
         },
         {
 
-          width: this.width * 3,
-          height: this.height * 3 - 36,
+          width: width * 3,
+          height: height * 3 - 36,
           scale: 3
         },
         {
 
-          width: this.width * 4,
-          height: this.height * 4 - 36,
+          width: width * 4,
+          height: height * 4 - 36,
           scale: 4
       }],
       scaleIndex: 5,
@@ -218,11 +219,15 @@ export default {
       }
       changeScale(this.scaleList[this.scaleIndex].scale)
       scaleGraphics()
+    },
+    deleteTag () {
+      deleteTags()
     }
   },
   computed: {
     ...mapState('editImage', [
       'currentImage',
+      'currentSvg',
     ])
   }
 }

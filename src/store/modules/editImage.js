@@ -66,7 +66,10 @@ const editImage = {
     },
     SET_CURRENT_SVG: (state, data) => {
       state.currentSvg.push(data)
-      console.log(state.currentSvg)
+    },
+    DELETE_CURRENT_SVG: (state, data) => {
+      const i = state.currentSvg.findIndex(e => e.id === data.id)
+      state.currentSvg.splice(i, 1)
     },
   },
   actions: {
@@ -86,64 +89,9 @@ const editImage = {
     updateCurrentSvg ({ commit }, data) {
       commit('SET_CURRENT_SVG', data)
     },
-    // 新增工作区
-    addWorkArea ({ commit }, data) {
-      commit('SET_WORK_AREA', data)
-    },
-    // 切换工作区
-    changeWorkTabs ({ commit, state }, tabsValue) {
-      const index = state.workTabList.findIndex(e =>
-        e.name === state.workTabsValue)
-      commit('SET_MODEL_CONFIG', index)
-      commit('SET_BRUSHED_NODES', {
-        index,
-        data: _.cloneDeep(brushSelectedNodes.list)
-      })
-      commit('SET_TAB_VALUE', tabsValue)
-      clearTimeout(timedOut)
-      new Promise((resolve) => {
-        clearAll()
-        resolve()
-      }).then(() => {
-        const currentWorkArea = state.workTabList.find(e => e.name === state.workTabsValue)
-        if (Object.keys(currentWorkArea.modelConfig).length > 0) {
-          openModel(currentWorkArea.modelConfig)
-        }
-        brushSelectedNodes.list = _.cloneDeep(currentWorkArea.brushSelectedNodes)
-        currentWorkArea.brushSelectedNodes.forEach((d) => {
-          d3.selectAll(`#g${d.id}`)
-            .selectAll('.calculateBg')
-            .attr('stroke', variables.primaryColor)
-        })
-        commit('SET_CIRCULATE_STATUS', currentWorkArea.circulateStatus)
-        if (!state.tabCirculateStatus.start) {
-          $('.back-drop').addClass('active')
-          if (state.tabCirculateStatus.submitId) {
-            getStatus()
-          }
-        } else {
-          $('.back-drop').removeClass('active')
-        }
-      })
-    },
-    // 删除工作区
-    deleteWorkArea ({ commit, state }, targetName) {
-      commit('DELETE_WORK_AREA', targetName)
-    },
-    updateCopyNodes ({ commit }, data) {
-      commit('SET_COPY_NODES', data)
-    },
-    // 更新当前工作区保存状态
-    updateModel ({ commit, state }, data) {
-      const index = state.workTabList.findIndex(e =>
-        e.name === state.workTabsValue)
-      commit('SET_SAVED_MODEL', { index, data })
-    },
-    // 更新当前工作区鼠标状态
-    updateCursor ({ commit, state }, data) {
-      const index = state.workTabList.findIndex(e =>
-        e.name === state.workTabsValue)
-      commit('SET_CURSOR_STATUS', { index, data })
+    // 删除
+    deleteTag ({ commit, state }, data) {
+      commit('DELETE_CURRENT_SVG', data)
     },
   }
 }
