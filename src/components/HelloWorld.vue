@@ -1,5 +1,38 @@
 <template>
   <el-container class="el-container">
+    <el-upload
+      action="https://jsonplaceholder.typicode.com/posts/"
+      list-type="picture-card"
+      :auto-upload="false">
+      <i slot="default" class="el-icon-plus"></i>
+      <div slot="file" slot-scope="{file}" @click="changeImage(file)">
+        <img
+          class="el-upload-list__item-thumbnail"
+          :src="file.url" alt="">
+        <span class="el-upload-list__item-actions">
+        <span
+          class="el-upload-list__item-preview"
+          @click="handlePictureCardPreview(file)">
+          <i class="el-icon-zoom-in"></i>
+        </span>
+        <span
+          v-if="!disabled"
+          class="el-upload-list__item-delete"
+          @click="handleDownload(file)">
+          <i class="el-icon-download"></i>
+        </span>
+        <span
+          v-if="!disabled"
+          class="el-upload-list__item-delete"
+          @click="handleRemove(file)">
+          <i class="el-icon-delete"></i>
+        </span>
+      </span>
+      </div>
+    </el-upload>
+    <el-dialog :visible.sync="dialogVisible">
+      <img width="100%" :src="dialogImageUrl" alt="">
+    </el-dialog>
     <div class="edit-image">
       <div class="operation-wrapper">
         <div>
@@ -18,11 +51,11 @@
       </div>
       <div class="style-config" v-if="active>1&&active<7">
         <span class="stroke-width" v-if="active>1&&active<5">
-          <span :class="currentImage.strokeWidth===2?'checked':''"
+          <span :class="currentEdit.strokeWidth===2?'checked':''"
                 @click="changeStrokeWidth(2)">1</span>
-          <span :class="currentImage.strokeWidth===4?'checked':''"
+          <span :class="currentEdit.strokeWidth===4?'checked':''"
                 @click="changeStrokeWidth(4)">2</span>
-          <span :class="currentImage.strokeWidth===8?'checked':''"
+          <span :class="currentEdit.strokeWidth===8?'checked':''"
                 @click="changeStrokeWidth(8)">3</span>
         </span>
         <span class="font-size-select" v-if="active===5">
@@ -41,11 +74,6 @@
         </span>
       </div>
       <div class="main">
-        <div class="image-wrapper" :style="{width: `${scaleList[scaleIndex].width}px`,
-        height: `${scaleList[scaleIndex].height}px`,
-        margin: `${scaleList[scaleIndex].scale < 1 ? 'auto' : 'inherit'}`}">
-          <img id="image" src="@/assets/img/1.jpg"/>
-        </div>
         <div id="svg-container" :style="{width: `${scaleList[scaleIndex].width}px`,
         height: `${scaleList[scaleIndex].height}px`,
         left: `${scaleList[scaleIndex].scale < 1 ? '50%' : 'inherit'}`,
@@ -54,15 +82,16 @@
       <div id="textInput" class="text-input"
            contenteditable="true"
            :style="{
-           color: currentImage.text.color,
-           fontSize: `${currentImage.text.fontSize}px`
+           color: currentEdit.text.color,
+           fontSize: `${currentEdit.text.fontSize}px`
            }"></div>
     </div>
   </el-container>
 </template>
 
 <script>
-import { drawInit, toggleDrawingMode, changeScale, scaleGraphics, deleteTags } from '@/js/draw'
+import { drawInit, toggleDrawingMode, changeScale,
+  scaleGraphics, deleteTags, changeImageBg } from '@/js/draw'
 import { mapState, mapActions } from 'vuex'
 
 const width = 600
@@ -74,6 +103,9 @@ export default {
   },
   data() {
     return {
+      dialogImageUrl: '',
+      dialogVisible: false,
+      disabled: false,
       imageUrl: '',
       active: 0,
       operationList: [
@@ -175,27 +207,44 @@ export default {
     ...mapActions('editImage', [
       'updateStrokeWidth',
       'updateColor',
-      'updateFontSize'
+      'updateFontSize',
+      'updateImageList',
     ]),
+    changeImage (file) {
+      changeImageBg(file)
+      this.updateImageList(file)
+      scaleGraphics()
+      this.active = 0
+    },
+    handleRemove(file) {
+      console.log(file);
+    },
+    handlePictureCardPreview(file) {
+      this.dialogImageUrl = file.url;
+      this.dialogVisible = true;
+    },
+    handleDownload(file) {
+      console.log(file);
+    },
     shapeToggle (shapeId) {
       this.active = shapeId
       toggleDrawingMode(shapeId)
       switch (shapeId) {
         case 2:
-          this.checkedColor = this.currentImage.pathColor
+          this.checkedColor = this.currentEdit.pathColor
           break
         case 3:
-          this.checkedColor = this.currentImage.rectColor
+          this.checkedColor = this.currentEdit.rectColor
           break
         case 4:
-          this.checkedColor = this.currentImage.ellipseColor
+          this.checkedColor = this.currentEdit.ellipseColor
           break
         case 5:
-          this.checkedColor = this.currentImage.text.color
-          this.fontSize = this.currentImage.text.fontSize
+          this.checkedColor = this.currentEdit.text.color
+          this.fontSize = this.currentEdit.text.fontSize
           break
         case 6:
-          this.checkedColor = this.currentImage.tag.color
+          this.checkedColor = this.currentEdit.tag.color
           break
         default:
           break
@@ -226,7 +275,7 @@ export default {
   },
   computed: {
     ...mapState('editImage', [
-      'currentImage',
+      'currentEdit',
       'currentSvg',
     ])
   }

@@ -10,7 +10,7 @@ let drawingModeId = 0
 let textPosition = {}
 let scale = 1 // 缩放比例
 let currentShape = null // 当前绘制图形
-const current = store.state.editImage.currentImage
+let current = store.state.editImage.currentEdit
 let coords = {
   sP: null, // 起点偏移,{ offsetX: num, offsetY: num }
   eP: null, // 终点偏移
@@ -28,10 +28,16 @@ export function drawInit () {
   }
   drawingModeId = 0
   drawingMode = ''
+  scale = 1
   coords = {
     sP: null,
     eP: null,
   }
+  textPosition = {
+    x: 0,
+    y: 0
+  }
+  current = store.state.editImage.currentEdit
   svg = d3.select('#svg-container')
     .append('svg')
     .attr('width', '100%')
@@ -40,6 +46,17 @@ export function drawInit () {
     .on('mousemove', handleMouseMove)
     .on('mouseup', handleMouseUp)
     .on('click', handleClick)
+
+  svg.append('image').attr('id', 'imageBg')
+}
+
+export function changeImageBg (file) {
+  d3.select('#imageBg')
+    .attr('xlink:href', file.url)
+    .attr('width', '100%')
+    .attr('height', '100%')
+    .attr('x', 0)
+    .attr('y', 0)
 }
 
 /* 切换绘制模式 */
@@ -68,6 +85,7 @@ export function toggleDrawingMode (shapeId) {
 export function scaleGraphics () {
   const created = cloneDeep(store.state.editImage.currentSvg)
   drawInit()
+  changeImageBg(store.state.editImage.currentImage)
   drawCreated(created)
 }
 
